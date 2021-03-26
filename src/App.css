@@ -1,0 +1,69 @@
+* {
+  font-family: 'Open Sans', sans-serif;
+}
+
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  background-color: #eee;
+}
+
+.title {
+  text-align: center;
+  padding-bottom: 5px;
+}
+
+.wrapper {
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  display: flex;
+}
+
+.form {
+  background-color: white;
+  box-shadow: 0px 15px 30px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  border-radius: 10px;
+}
+
+.input {
+  display: flex;
+  margin: 10px;
+  padding: 5px;
+  border: none;
+  border-radius: 5px;
+}
+
+.button {
+  background-color: #1890ff;
+  padding: 5px;
+  text-align: center;
+  border-radius: 5px;
+  margin: 10px;
+  color: white;
+  cursor: pointer;
+}
+
+.button.submitted {
+  background-color: gray;
+}
+
+@keyframes shake {
+  0% { transform: translate(1px, 1px) rotate(0deg); }
+  10% { transform: translate(-1px, -2px) rotate(-1deg); }
+  20% { transform: translate(-3px, 0px) rotate(1deg); }
+  30% { transform: translate(3px, 2px) rotate(0deg); }
+  40% { transform: translate(1px, -1px) rotate(1deg); }
+  50% { transform: translate(-1px, 2px) rotate(-1deg); }
+  60% { transform: translate(-3px, 1px) rotate(0deg); }
+  70% { transform: translate(3px, 1px) rotate(-1deg); }
+  80% { transform: translate(-1px, -1px) rotate(1deg); }
+  90% { transform: translate(1px, 2px) rotate(0deg); }
+  100% { transform: translate(1px, -2px) rotate(-1deg); }
+}
+
+.shake {
+  animation: shake 0.5s linear 1;
+}
