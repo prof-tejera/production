@@ -1,64 +1,56 @@
-// Minor thing about homework that I saw a lot of people doing:
-class MyComponent extends React.Component {
-  render() {
-    const { nPages } = this.props;
-
-    // This loop is unnecessary
-    const indexes = [];
-    for (let i = 0; i < nPages; i++) {
-      indexes.push(i);
-    }
-
-    const pages = indexes.map(i => {
-      return <div key={i}>Page {i}</div>;
-    });
-
-    // no need for this
-    pages.unshift(<div key="<">{'<'}</div>);
-    pages.push(<div key={'>'}>{'>'}</div>);
-
-    return <>{pages}</>;
+// Small state example (counter), then show Homework 3 solution with state included
+class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      counter: 0,
+    };
   }
-}
 
-class MyComponent extends React.Component {
   render() {
-    const { nPages } = this.props;
-
-    const pages = [];
-    for (let i = 0; i < nPages; i++) {
-      indexes.push(<div key={i}>Page {i}</div>);
-    }
-
     return (
-      <>
-        <div>{'<'}</div>
-        {pages}
-        <div>{'>'}</div>
-      </>
+      <div>
+        <h3>Count: {this.state.counter}</h3>
+        <button onClick={() => this.setState({ counter: this.state.counter + 1 })}>+</button>
+        <button onClick={() => this.setState({ counter: this.state.counter - 1 })}>-</button>
+      </div>
     );
   }
 }
 
+// Extending - don't do this
 class GenericInput extends React.Component {
-  validate = () => {
-    console.log('Calling Generic Validate');
+  constructor() {
+    super();
+    this.state = {
+      value: '',
+    };
+  }
+
+  validate = newValue => {
+    if (this.props.validate) return this.props.validate(newValue);
     return true;
   };
 
   render() {
     const { type = 'text', value, onChange } = this.props;
+
     return (
       <input
-        {...{ type, value }}
+        type={type}
+        value={value}
         onChange={e => {
           const { value: newValue } = e.target;
 
           // If invalid input, don't set it
           if (!this.validate(newValue)) return;
 
-          // It's valid, lets tell parent
+          // It's valid, lets tell parent and update state
           onChange(newValue);
+
+          this.setState({
+            value: newValue,
+          });
         }}
       />
     );
@@ -66,6 +58,10 @@ class GenericInput extends React.Component {
 }
 
 class IntegerInput extends GenericInput {
+  constructor(props) {
+    super(props);
+  }
+
   validate = v => {
     console.log('Calling IntegerInput Validate', v);
 
@@ -81,58 +77,26 @@ class IntegerInput extends GenericInput {
   };
 }
 
-class App extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      text: '',
-      number: '',
-      integer: '',
-    };
-  }
+// Instead do:
+class IntegerInput extends React.Component {
+  validate = v => {
+    console.log('Calling IntegerInput Validate', v);
+
+    try {
+      // handle empty
+      if (v.length === 0) return true;
+
+      const number = parseFloat(v);
+      return Number.isInteger(number);
+    } catch (e) {
+      return false;
+    }
+  };
 
   render() {
-    return [
-      {
-        label: 'Text',
-        stateKey: 'text',
-      },
-      {
-        label: 'Numeric Input',
-        stateKey: 'number',
-        type: 'number',
-      },
-      {
-        label: 'Integer Input',
-        stateKey: 'integer',
-        type: 'number',
-        component: IntegerInput,
-      },
-    ].map(item => {
-      const ComponentClass = item.component || GenericInput;
-
-      return (
-        <div key={item.stateKey} className="input">
-          <div style={{ width: '130px', paddingRight: '10px' }}>{item.label}</div>
-          <ComponentClass
-            type={item.type}
-            value={this.state[item.stateKey]}
-            onChange={v => {
-              this.setState({ [item.stateKey]: v });
-            }}
-          />
-        </div>
-      );
-    });
+    return <GenericInput {...this.props} validate={this.validate} />;
   }
 }
-
-// How to disable the blue box that Webkit browsers add around inputs or focusable elements
-```css
-button:focus {
-  outline: 0;
-}
-```;
 
 // ------------------------------------------------------------------------------------------
 // PROP TYPES
@@ -188,17 +152,48 @@ RadioButton.propTypes = {
   optionalInstance: PropTypes.instanceOf(MyClass), // an instance of a specific class
 };
 
-class MyComponent extends Component {
-  render = () => <div>MyComponent</div>;
+class MyComponent extends React.Component {
+  render() {
+    const { p1, p2, p3, p4, children, level = 0 } = this.props;
+
+    const P3 = p3;
+
+    return (
+      <div className={`my-component level-${level}`}>
+        <p>p1: {p1}</p>
+        <p>p2: {p2}</p>
+        {P3 && (
+          <p>
+            <P3 level={level + 1}>Hi</P3>
+          </p>
+        )}
+        <p>p4: {p4 && p4.f1()}</p>
+        <p>Children: {children}</p>
+      </div>
+    );
+  }
 }
 
-// Example
 MyComponent.propTypes = {
   p1: PropTypes.node, // anything that can be rendered
   p2: PropTypes.element, // specifically a react element
   p3: PropTypes.elementType,
-  p4: PropTypes.instanceOf(MyComponent),
+  p4: PropTypes.instanceOf(Test),
 };
+
+class Test {
+  f1 = () => Math.random();
+}
+
+class App extends React.Component {
+  render() {
+    return (
+      <div>
+        <MyComponent p1="abc" p2={<b>test</b>} p3={MyComponent} p4={new Test()} />
+      </div>
+    );
+  }
+}
 
 // Allowing more than 1 type
 MyComponent.propTypes = {
@@ -277,6 +272,11 @@ Avatar.propTypes = {
 
 // Default values
 Avatar.defaultProps = {
+  // if p1 is not provided, it will be set to 1
+  p1: 1,
+  // note that in this case, if a user is provided without a fullName,
+  // if will NOT be set to 'Default User'. This will only happen if the
+  // user prop is not provided at all
   user: {
     fullName: 'Default User',
   },
@@ -284,21 +284,31 @@ Avatar.defaultProps = {
 
 // Its useful to create our own PropTypes so we
 // don't have to repeat the definition everywhere
+const MyPropTypes = {
+  user: PropTypes.exact({
+    fullName: PropTypes.string,
+    email: PropTypes.string,
+  }),
+};
+
+// Then use as:
+Avatar.propTypes = {
+  user: MyPropTypes.user,
+};
 
 // Styling ---------------------------------------------------------------------------------------------
 
-class App extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      submitted: false,
-    };
-  }
+// - css pre-processors
+// npm i --save node-sass
+// change imports to .scss
 
+class Form extends React.Component {
   render() {
+    const { submitted } = this.props;
+
     return (
       <div className="wrapper">
-        <div className={`form ${this.state.submitted ? 'shake' : ''}`}>
+        <div className={`form ${submitted ? 'shake' : ''}`}>
           <div className="title">Login</div>
           <div>
             <input className="input" placeholder="Username" />
@@ -306,19 +316,16 @@ class App extends React.Component {
           <div>
             <input className="input" placeholder="Password" type="password" />
           </div>
-          <div
-            className={`button ${this.state.submitted ? 'submitted' : ''}`}
-            onClick={() => {
-              this.setState({
-                submitted: true,
-              });
-            }}
-          >
-            Log In
-          </div>
+          <div className={`button ${submitted ? 'submitted' : ''}`}>Log In</div>
         </div>
       </div>
     );
+  }
+}
+
+class App extends React.Component {
+  render() {
+    return <Form submitted />;
   }
 }
 
@@ -368,15 +375,10 @@ const Styles = {
   },
 };
 
-class App extends React.Component {
-  constructor() {
-    super();
-    this.state = {
-      submitted: false,
-    };
-  }
-
+class Form extends React.Component {
   render() {
+    const { submitted } = this.props;
+
     return (
       <div style={Styles.wrapper}>
         <div style={Styles.form}>
@@ -390,12 +392,7 @@ class App extends React.Component {
           <div
             style={{
               ...Styles.button,
-              backgroundColor: this.state.submitted ? 'gray' : '#1890ff',
-            }}
-            onClick={() => {
-              this.setState({
-                submitted: true,
-              });
+              backgroundColor: submitted ? 'gray' : '#1890ff',
             }}
           >
             Log In
@@ -495,7 +492,3 @@ class App extends React.Component {
     );
   }
 }
-
-// - css pre-processors
-// npm i --save node-sass
-// change imports to .scss
