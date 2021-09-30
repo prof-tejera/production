@@ -33,12 +33,13 @@ class GenericInput extends React.Component {
   };
 
   render() {
-    const { type = 'text', value, onChange } = this.props;
+    const { type = 'text', value, onChange, placeholder } = this.props;
 
     return (
       <input
         type={type}
         value={value}
+        placeholder={placeholder || 'GenericInput'}
         onChange={e => {
           const { value: newValue } = e.target;
 
@@ -46,7 +47,9 @@ class GenericInput extends React.Component {
           if (!this.validate(newValue)) return;
 
           // It's valid, lets tell parent and update state
-          onChange(newValue);
+          if (onChange) {
+            onChange(newValue);
+          }
 
           this.setState({
             value: newValue,
@@ -69,6 +72,8 @@ class IntegerInput extends GenericInput {
       // handle empty
       if (v.length === 0) return true;
 
+      if (isNaN(v)) return false;
+
       const number = parseFloat(v);
       return Number.isInteger(number);
     } catch (e) {
@@ -85,6 +90,8 @@ class IntegerInput extends React.Component {
     try {
       // handle empty
       if (v.length === 0) return true;
+
+      if (isNaN(v)) return false;
 
       const number = parseFloat(v);
       return Number.isInteger(number);
@@ -148,7 +155,7 @@ RadioButton.propTypes = {
 RadioButton.propTypes = {
   optionalNode: PropTypes.node, // anything that can be rendered
   optionalElement: PropTypes.element, // specifically a react element
-  optionalElementType: PropTypes.elementType, // a string which is the element's type ('textearea', 'div') or the actual class {MyClass}
+  optionalElementType: PropTypes.elementType, // a string which is the a native HTML element's type ('textearea', 'div') or the actual class {MyClass}
   optionalInstance: PropTypes.instanceOf(MyClass), // an instance of a specific class
 };
 
@@ -163,9 +170,9 @@ class MyComponent extends React.Component {
         <p>p1: {p1}</p>
         <p>p2: {p2}</p>
         {P3 && (
-          <p>
+          <div>
             <P3 level={level + 1}>Hi</P3>
-          </p>
+          </div>
         )}
         <p>p4: {p4 && p4.f1()}</p>
         <p>Children: {children}</p>

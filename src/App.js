@@ -1,22 +1,21 @@
 import './App.css';
 import React from 'react';
+import PropTypes from 'prop-types';
 
-class Form extends React.Component {
+class Counter extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      counter: 0,
+    };
+  }
+
   render() {
-    const { submitted } = this.props;
-
     return (
-      <div className="wrapper">
-        <div className={`form ${submitted ? 'shake' : ''}`}>
-          <div className="title">Login</div>
-          <div>
-            <input className="input" placeholder="Username" />
-          </div>
-          <div>
-            <input className="input" placeholder="Password" type="password" />
-          </div>
-          <div className={`button ${submitted ? 'submitted' : ''}`}>Log In</div>
-        </div>
+      <div>
+        <h3>Count: {this.state.counter}</h3>
+        <button onClick={() => this.setState({ counter: this.state.counter + 1 })}>+</button>
+        <button onClick={() => this.setState({ counter: this.state.counter - 1 })}>-</button>
       </div>
     );
   }
@@ -24,7 +23,11 @@ class Form extends React.Component {
 
 class App extends React.Component {
   render() {
-    return <Form submitted />;
+    return (
+      <div>
+        <Counter />
+      </div>
+    );
   }
 }
 
