@@ -1,34 +1,31 @@
-import './App.css';
-import React from 'react';
 import PropTypes from 'prop-types';
 
-class Counter extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      counter: 0,
-    };
-  }
+const SimpleButton = ({ label, onClick }) => {
+  return <button onClick={onClick}>{label}</button>;
+};
 
-  render() {
-    return (
-      <div>
-        <h3>Count: {this.state.counter}</h3>
-        <button onClick={() => this.setState({ counter: this.state.counter + 1 })}>+</button>
-        <button onClick={() => this.setState({ counter: this.state.counter - 1 })}>-</button>
-      </div>
-    );
-  }
-}
+SimpleButton.propTypes = {
+  label: PropTypes.string,
+  onClick: PropTypes.func,
+};
 
-class App extends React.Component {
-  render() {
-    return (
-      <div>
-        <Counter />
-      </div>
-    );
-  }
-}
+const App = () => {
+  return (
+    <div>
+      <SimpleButton
+        label={1}
+        onClick={() => {
+          console.log('clicked 1');
+        }}
+      />
+      <SimpleButton
+        label="Test 2"
+        onClick={() => {
+          console.log('clicked 2');
+        }}
+      />
+    </div>
+  );
+};
 
 export default App;
