@@ -193,3 +193,10 @@ Error boundaries do not catch errors for:
 
 Because of this, we recommend using a third-party module called [`react-error-boundary`](https://www.npmjs.com/package/react-error-boundary). After installing it, we can use it as:
 
+# TODO
+react-error-boundary
+Sentry
+
+## Third Party Providers
+Auth0
+AWS Cognito
