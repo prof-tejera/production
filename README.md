@@ -193,10 +193,149 @@ Error boundaries do not catch errors for:
 
 Because of this, we recommend using a third-party module called [`react-error-boundary`](https://www.npmjs.com/package/react-error-boundary). After installing it, we can use it as:
 
-# TODO
-react-error-boundary
-Sentry
+## react-error-boundary
 
-## Third Party Providers
-Auth0
-AWS Cognito
+This module is quite simple to use and adheres quite closely to React's implementation, but fixes most of its caveats. The simplest example (from their website):
+
+```jsx
+import { ErrorBoundary } from 'react-error-boundary'
+
+const ErrorFallback = ({ error, resetErrorBoundary }) => (
+  <div role="alert">
+    <p>Something went wrong:</p>
+    <pre>{error.message}</pre>
+    <button onClick={resetErrorBoundary}>Try again</button>
+  </div>
+);
+
+const Wrapped = () => {
+  return <ErrorBoundary FallbackComponent={ErrorFallback} onError={(error, errorInfo) => {
+    // Handle error, maybe send it to a logging service
+  }}>
+    <App />
+  </ErrorBoundary>;
+}
+```
+
+## Error Logging
+Logging errors is great in development mode, its the easiest and probably most used tool in a programmer's toolbelt. However, once we put our application in the hands of our users, we won't be able to see their consoles (unless you are next to them). There are different ways to address this. 
+
+### Screen Recording
+There are services out there that allow us to record user sessions as they use our application. This is useful not only to find errors but also to understand behavior. Some notable ones are [Crazyegg](https://www.crazyegg.com/) or [HotJar](https://hotjar.com/).
+
+### Error Logging
+Another approach is to capture any errors that occur in our app, post the error information to a third-party service that will alert us. Hopefully the information we have will be useful enough so we can debug it and fix it. A popular service is [Sentry](https://sentry.io), which provides a very simple React implementation:
+
+```jsx
+import React from "react";
+import ReactDOM from "react-dom";
+import * as Sentry from "@sentry/react";
+import { BrowserTracing } from "@sentry/tracing";
+import App from "./App";
+
+Sentry.init({
+  dsn: '<your dsn here>',
+  integrations: [new BrowserTracing()],
+
+  // Set tracesSampleRate to 1.0 to capture 100%
+  // of transactions for performance monitoring.
+  // We recommend adjusting this value in production
+  tracesSampleRate: 1.0,
+});
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+Thats it! Any time our application blows up, an error will be reported to our Sentry application. Note that this still requires us to implement our Error Boundaries if we want to avoid the WSOD (white screen of death!).
+
+# Performance
+
+We have talked quite a bit about a component's lifecycle, order of operations, rendering, effects. A simple component does not have a lot complexity, but as soon as we add state, dependencies, changing props, etc, we can easily make mistakes that can degrade performance significantly. 
+
+## Infinite Loops
+It is actually very easy to cause infinite rendering loops in React. The two most common are:
+
+### `useEffect` loops
+```jsx
+const App = () => {
+  const [counter, setCounter] = useState(0);
+
+  // Do something in here that updates the counter. this effect triggers itself and will cause an infinite loop. In this case, the problem is easy to spot since the dependencies are explicit
+  useEffect(() => {
+    setCounter(c => c + 1);
+  }, [counter])
+
+  // In this case, the effect also will trigger infinitely, but is harder to debug since the dependencies are not explicit
+  useEffect(() => {
+    setCounter(c => c + 1);
+  })
+
+  return <div>{conuter}</div>;
+}
+```
+
+### Infinite re-renders
+```jsx
+const App = () => {
+  const [counter, setCounter] = useState(0);
+
+  // Updating a state variable in the main component function will cause it to re-render infinitely.
+  setCounter(counter + 1);
+
+  return <div>{conuter}</div>;
+}
+```
+
+## Optimizing Rendering
+Re-rendering a component is not something we should be scared of. After all, React's promise is to make it super efficient to do so, as it will only update the parts of the real DOM that have changed. However, diffing is not free and when are components are large and complex, re-rendering can affect performance and consequently the user experience. Let's explore some tools that we can use to help React and avoid re-rendering when its not needed.
+
+`memo`
+In simple terms, a "memoized" value is a cached value that don't gets recalculated unless we say so. In React, wrapping a component with `memo` makes sure that it doesn't re-render unless it's `props` have changed. For example:
+
+```jsx
+const Toggle = ({ name, changeToggle }) => {
+  console.log('Rendering Toggle:', name);
+  return (
+    <div>
+      <button onClick={changeToggle}>Toggle</button>
+    </div>
+  );
+};
+
+const MemoizedToggle = memo(Toggle);
+
+const App = () => {
+  const [count, setCount] = useState(0);
+  const [toggle, setToggle] = useState(false);
+
+  const increment = () => {
+    setCount(c => c + 1);
+  };
+
+  const changeToggle = () => {
+    setToggle(!toggle);
+  };
+
+  return (
+    <div>
+      <pre>{JSON.stringify({ count, toggle }, null, 2)}</pre>
+      <button onClick={increment}>Increment</button>
+      <Toggle name="not using memo"/>
+      <MemoizedToggle name="using memo"/>
+    </div>
+  );
+};
+```
+
+Note that a memoized component WILL re-render if its internal state (including state coming from out Context) changes. So should you always wrap your components in `memo`? Not really. In most cases its not needed since the performance gains are negligible. This should be used sparsely, only for components that re-render too often and are complex (i.e. the diffing would take considerable time).
+
+`useCallback(func, deps)`
+In the above example, we did not provide a handler to the `Toggle` component. If we now pass the `changeToggle` handler, we can see that even the memoized version `MemoizedToggle` re-renders. This is because when `App` re-renders, it creates a new version of the `changeToggle` function. Even though the function itself hasn't changed, its reference has. `MemoizedToggle` sees the new reference as a `prop` change, so it re-renders. To avoid this, we can also memoize our handler using `useCallback` as follows:
+
+```jsx
+const changeToggle = useCallback(() => {
+  setToggle(!toggle);
+}, [toggle]);
+```
+
+Now, `changeToggle` will only be regenerated if `toggle` changes.

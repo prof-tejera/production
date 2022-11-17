@@ -1,29 +1,34 @@
-import PropTypes from 'prop-types';
+import React, { memo, useState, useCallback } from 'react';
 
-const SimpleButton = ({ label, onClick }) => {
-  return <button onClick={onClick}>{label}</button>;
-};
-
-SimpleButton.propTypes = {
-  label: PropTypes.string,
-  onClick: PropTypes.func,
-};
-
-const App = () => {
+const Independent = ({ name, changeToggle }) => {
+  console.log('Rendering Independent:', name);
   return (
     <div>
-      <SimpleButton
-        label={1}
-        onClick={() => {
-          console.log('clicked 1');
-        }}
-      />
-      <SimpleButton
-        label="Test 2"
-        onClick={() => {
-          console.log('clicked 2');
-        }}
-      />
+      <button onClick={changeToggle}>Toggle</button>
+    </div>
+  );
+};
+
+const WrappedIndependent = memo(Independent);
+
+const App = () => {
+  const [count, setCount] = useState(0);
+  const [toggle, setToggle] = useState(false);
+
+  const increment = () => {
+    setCount(c => c + 1);
+  };
+
+  const changeToggle = useCallback(() => {
+    setToggle(!toggle);
+  }, [toggle]);
+
+  return (
+    <div>
+      <pre>{JSON.stringify({ count, toggle }, null, 2)}</pre>
+      <button onClick={increment}>Increment</button>
+      <Independent name="not using memo" changeToggle={changeToggle} />
+      <WrappedIndependent name="using memo" changeToggle={changeToggle} />
     </div>
   );
 };
