@@ -24,7 +24,7 @@ const SimpleButton = ({ label, onClick }) => {
 }
 
 // Define the type of properties that we expect
-RadioButton.propTypes = {
+SimpleButton.propTypes = {
   label: PropTypes.string,
   onClick: PropTypes.func,
 };

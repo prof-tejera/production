@@ -1,35 +1,28 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { useEffect, useState } from 'react';
+import { ErrorBoundary } from 'react-error-boundary';
 
-const Independent = ({ name, changeToggle }) => {
-  console.log('Rendering Independent:', name);
-  return (
-    <div>
-      <button onClick={changeToggle}>Toggle</button>
-    </div>
-  );
+const BlowUp = ({ name }) => {
+  return <div>The length of name is {name.length}</div>;
 };
 
-const WrappedIndependent = memo(Independent);
-
 const App = () => {
-  const [count, setCount] = useState(0);
-  const [toggle, setToggle] = useState(false);
+  const [explode, setExplode] = useState(false);
 
-  const increment = () => {
-    setCount(c => c + 1);
-  };
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setExplode(true);
+    }, 1000);
 
-  const changeToggle = useCallback(() => {
-    setToggle(!toggle);
-  }, [toggle]);
+    return () => clearTimeout(t);
+  }, []);
 
   return (
-    <div>
-      <pre>{JSON.stringify({ count, toggle }, null, 2)}</pre>
-      <button onClick={increment}>Increment</button>
-      <Independent name="not using memo" changeToggle={changeToggle} />
-      <WrappedIndependent name="using memo" changeToggle={changeToggle} />
-    </div>
+    <ErrorBoundary fallback={<div>Something Failed</div>}>
+      <div>
+        Wait for it...
+        {explode && <BlowUp />}
+      </div>
+    </ErrorBoundary>
   );
 };
 
